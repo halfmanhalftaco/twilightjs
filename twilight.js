@@ -6,22 +6,22 @@ document.addEventListener('DOMContentLoaded', twilightMain);
 var gl;
 var twilightParams = {
     // twilight.c colors
-    orange: [1, 72.0/256.0, 0, 1],
-    blueish: [0, 110.0/256.0, 189.0/256.0, 1],
-    black: [0,0,0,1],
+    //orange: [1, 72.0/256.0, 0, 1],
+    //blueish: [0, 110.0/256.0, 189.0/256.0, 1],
+    //black: [0,0,0,1],
     
     // tweakoz/twilight colors
-    //orange: [1, 0.3, 0, 1],
-    //blueish: [0, 0.5, 0.7, 1],
-    //black: [0,0,0,1],
+    orange: [1, 0.3, 0, 1],
+    blueish: [0, 0.5, 0.7, 1],
+    black: [0,0,0,1],
     
     TRANSITION: 0.2,
     NUM_SMALL_STARS: 2500,
     NUM_BIG_STARS: 200
 }
 
-var bgPosBuf;
-var bgColBuf;
+var bgPosBuf, bgColBuf;
+var starPosBuf;
 
 async function twilightMain() {
     var canvas = document.getElementById('twilight');
@@ -37,6 +37,7 @@ async function twilightMain() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     drawHorizon();
+    drawStars();
 }
 
 function initGL(canvas) {
@@ -78,7 +79,7 @@ async function compileProgram(programName) {
     return prog;
 }
 
-function loadBuffers() {
+function loadHorizonBuffers() {
     var tp = (2*twilightParams.TRANSITION)-1;
 
     var positionBuffer = gl.createBuffer();
@@ -128,7 +129,7 @@ async function drawHorizon() {
     var prog = await compileProgram("horizon");
     var positionAttribLoc = gl.getAttribLocation(prog, "a_position");
     var colorAttribLoc = gl.getAttribLocation(prog, "a_color");
-    loadBuffers();
+    loadHorizonBuffers();
 
     gl.useProgram(prog);
 
@@ -141,6 +142,32 @@ async function drawHorizon() {
     gl.vertexAttribPointer(colorAttribLoc, 4, gl.FLOAT, false, 0, 0);
 
     gl.drawArrays(gl.TRIANGLES, 0, 12);
+}
+
+function loadStarBuffers() {
+    starPosBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, starPosBuf);
+    var smStars = [];
+    for(var i=0;i<twilightParams.NUM_SMALL_STARS*2;i++)
+    {
+        smStars.push(2*Math.random()-1);
+    }
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(smStars), gl.STATIC_DRAW);
+}
+
+async function drawStars() {
+    var prog = await compileProgram("stars");
+    var posAttribLoc = gl.getAttribLocation(prog, "a_position");
+    loadStarBuffers();
+    gl.useProgram(prog);
+    gl.enableVertexAttribArray(posAttribLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, starPosBuf);
+    gl.vertexAttribPointer(posAttribLoc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+
+    gl.drawArrays(gl.POINTS, 0, twilightParams.NUM_SMALL_STARS);
 }
 
 // super simple AJAX
