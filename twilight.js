@@ -45,7 +45,7 @@ async function twilightMain() {
     gl.bindBuffer(gl.ARRAY_BUFFER, bgColBuf);
     gl.vertexAttribPointer(colorAttribLoc, 4, gl.FLOAT, false, 0, 0);
 
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    gl.drawArrays(gl.TRIANGLES, 0, 12);
 }
 
 function initGL(canvas) {
@@ -93,10 +93,19 @@ function loadBuffers() {
     var points = [ 
         -1, -1,
         1, -1,
-        -1, 0,
-        1, 0,
+        -1, -0.6,
+
+        1, -0.6,
         1, -1,
-        -1, 0
+        -1, -0.6,
+
+        -1, 1,
+        1, 1,
+        -1, -0.6,
+
+        1, 1,
+        1, -0.6,
+        -1, -0.6
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
 
@@ -108,6 +117,13 @@ function loadBuffers() {
     colors = colors.concat(twilightParams.blueish);
     colors = colors.concat(twilightParams.blueish);
     colors = colors.concat(twilightParams.orange);
+    colors = colors.concat(twilightParams.blueish);
+
+    colors = colors.concat(twilightParams.black);
+    colors = colors.concat(twilightParams.black);
+    colors = colors.concat(twilightParams.blueish);
+    colors = colors.concat(twilightParams.black);
+    colors = colors.concat(twilightParams.blueish);
     colors = colors.concat(twilightParams.blueish);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
 
