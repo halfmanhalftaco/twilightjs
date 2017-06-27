@@ -4,11 +4,17 @@
 
 document.addEventListener('DOMContentLoaded', twilightMain);
 var gl;
-var prog;
 var twilightParams = {
-    orange: [1, 72.0/255.0, 0, 1],
-    blueish: [0, 110.0/255.0, 189.0/255.0, 1],
+    // twilight.c colors
+    orange: [1, 72.0/256.0, 0, 1],
+    blueish: [0, 110.0/256.0, 189.0/256.0, 1],
     black: [0,0,0,1],
+    
+    // tweakoz/twilight colors
+    //orange: [1, 0.3, 0, 1],
+    //blueish: [0, 0.5, 0.7, 1],
+    //black: [0,0,0,1],
+    
     TRANSITION: 0.2,
     NUM_SMALL_STARS: 2500,
     NUM_BIG_STARS: 200
@@ -27,25 +33,10 @@ async function twilightMain() {
     canvas.height = canvas.clientHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    prog = await compileProgram();
-    var positionAttribLoc = gl.getAttribLocation(prog, "a_position");
-    var colorAttribLoc = gl.getAttribLocation(prog, "a_color");
-    loadBuffers();
-
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(prog);
-
-    gl.enableVertexAttribArray(positionAttribLoc);
-    gl.bindBuffer(gl.ARRAY_BUFFER, bgPosBuf); 
-    gl.vertexAttribPointer(positionAttribLoc, 2, gl.FLOAT, false, 0, 0);
-
-    gl.enableVertexAttribArray(colorAttribLoc);
-    gl.bindBuffer(gl.ARRAY_BUFFER, bgColBuf);
-    gl.vertexAttribPointer(colorAttribLoc, 4, gl.FLOAT, false, 0, 0);
-
-    gl.drawArrays(gl.TRIANGLES, 0, 12);
+    drawHorizon();
 }
 
 function initGL(canvas) {
@@ -57,9 +48,9 @@ function initGL(canvas) {
     return gl;
 }
 
-async function compileProgram() {
-    var frag = await fetch("twilight.frag");
-    var vert = await fetch("twilight.vert");
+async function compileProgram(programName) {
+    var frag = await fetch(programName+".frag");
+    var vert = await fetch(programName+".vert");
 
     var fs = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fs, frag);
@@ -88,24 +79,26 @@ async function compileProgram() {
 }
 
 function loadBuffers() {
+    var tp = (2*twilightParams.TRANSITION)-1;
+
     var positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     var points = [ 
         -1, -1,
         1, -1,
-        -1, -0.6,
+        -1, tp,
 
-        1, -0.6,
+        1, tp,
         1, -1,
-        -1, -0.6,
+        -1, tp,
 
         -1, 1,
         1, 1,
-        -1, -0.6,
+        -1, tp,
 
         1, 1,
-        1, -0.6,
-        -1, -0.6
+        1, tp,
+        -1, tp
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
 
@@ -129,6 +122,25 @@ function loadBuffers() {
 
     bgPosBuf = positionBuffer;
     bgColBuf = colorBuffer;
+}
+
+async function drawHorizon() {
+    var prog = await compileProgram("horizon");
+    var positionAttribLoc = gl.getAttribLocation(prog, "a_position");
+    var colorAttribLoc = gl.getAttribLocation(prog, "a_color");
+    loadBuffers();
+
+    gl.useProgram(prog);
+
+    gl.enableVertexAttribArray(positionAttribLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bgPosBuf); 
+    gl.vertexAttribPointer(positionAttribLoc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(colorAttribLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bgColBuf);
+    gl.vertexAttribPointer(colorAttribLoc, 4, gl.FLOAT, false, 0, 0);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 12);
 }
 
 // super simple AJAX
