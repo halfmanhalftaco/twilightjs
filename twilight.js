@@ -37,7 +37,7 @@ async function twilightMain() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     drawHorizon();
-    drawStars();
+    drawSmallStars();
 }
 
 function initGL(canvas) {
@@ -155,7 +155,7 @@ function loadStarBuffers() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(smStars), gl.STATIC_DRAW);
 }
 
-async function drawStars() {
+async function drawSmallStars() {
     var prog = await compileProgram("stars");
     var posAttribLoc = gl.getAttribLocation(prog, "a_position");
     loadStarBuffers();
