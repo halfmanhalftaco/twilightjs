@@ -6,13 +6,16 @@ document.addEventListener('DOMContentLoaded', twilightMain);
 var gl;
 var prog;
 var twilightParams = {
-    orange: [1, 72.0/255.0, 0],
-    blueish: [0, 110.0/255.0, 189.0/255.0],
-    black: [0,0,0],
+    orange: [1, 72.0/255.0, 0, 1],
+    blueish: [0, 110.0/255.0, 189.0/255.0, 1],
+    black: [0,0,0,1],
     TRANSITION: 0.2,
     NUM_SMALL_STARS: 2500,
     NUM_BIG_STARS: 200
 }
+
+var bgPosBuf;
+var bgColBuf;
 
 async function twilightMain() {
     var canvas = document.getElementById('twilight');
@@ -24,16 +27,24 @@ async function twilightMain() {
     canvas.height = canvas.clientHeight;
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-    prog = await compileShaders();
+    prog = await compileProgram();
     var positionAttribLoc = gl.getAttribLocation(prog, "a_position");
+    var colorAttribLoc = gl.getAttribLocation(prog, "a_color");
     loadBuffers();
 
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.useProgram(prog);
-    gl.enableVertexAttribArray(positionAttribLoc);
 
+    gl.useProgram(prog);
+
+    gl.enableVertexAttribArray(positionAttribLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bgPosBuf); 
     gl.vertexAttribPointer(positionAttribLoc, 2, gl.FLOAT, false, 0, 0);
+
+    gl.enableVertexAttribArray(colorAttribLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bgColBuf);
+    gl.vertexAttribPointer(colorAttribLoc, 4, gl.FLOAT, false, 0, 0);
+
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
@@ -46,7 +57,7 @@ function initGL(canvas) {
     return gl;
 }
 
-async function compileShaders() {
+async function compileProgram() {
     var frag = await fetch("twilight.frag");
     var vert = await fetch("twilight.vert");
 
@@ -88,6 +99,20 @@ function loadBuffers() {
         -1, 0
     ];
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+
+    var colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+    var colors = [];
+    colors = colors.concat(twilightParams.orange);
+    colors = colors.concat(twilightParams.orange);
+    colors = colors.concat(twilightParams.blueish);
+    colors = colors.concat(twilightParams.blueish);
+    colors = colors.concat(twilightParams.orange);
+    colors = colors.concat(twilightParams.blueish);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+
+    bgPosBuf = positionBuffer;
+    bgColBuf = colorBuffer;
 }
 
 // super simple AJAX
